@@ -1,0 +1,59 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: hacdescm/messenger-clone:latest
+          build-args: |
+            NEXT_PUBLIC_PUSHER_APP_KEY=${{ secrets.NEXT_PUBLIC_PUSHER_APP_KEY }}
+            NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+
+  deployment:
+    needs: docker
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+    steps:
+      - 
+        uses: actions/checkout@v3
+      - 
+        name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v1.2.0
+      - 
+        name: Deploy
+        run: |
+          mkdir /home/runner/.kube
+          echo "${{ secrets.KUBECONFIG }}" > /home/runner/.kube/config
+          helmfile apply
+        env: 
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_GITHUB_ID: ${{ secrets.NEXTAUTH_GITHUB_ID }}
+          NEXTAUTH_GITHUB_SECRET: ${{ secrets.NEXTAUTH_GITHUB_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+          NEXT_PUBLIC_PUSHER_APP_KEY: ${{ secrets.NEXT_PUBLIC_PUSHER_APP_KEY }}
+          PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+          PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}

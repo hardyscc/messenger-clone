@@ -1,0 +1,51 @@
+releases:
+  - name: messenger
+    namespace: {{ env "KUBE_NAMESPACE" | default "messenger" }}
+    chart: ./chart
+    values:
+      - image:
+          repository: hacdescm/messenger-clone
+          tag: latest
+          pullPolicy: Always
+        replicaCount: 1
+        service:
+          port: 3000
+        podAnnotations:
+          timestamp: {{ now | date "20060102150405" | quote }}
+        migrateCommand: npm run migrate
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+          hosts:
+            - host: messenger.sysforce.com
+              paths:
+                - path: /
+                  pathType: ImplementationSpecific
+          tls:
+            - hosts:
+                - messenger.sysforce.com
+              secretName: messenger.sysforce.com-tls
+        env:
+          - name: DATABASE_URL
+            value: {{ requiredEnv "DATABASE_URL" | quote }}
+          - name: NEXTAUTH_SECRET
+            value: {{ requiredEnv "NEXTAUTH_SECRET" | quote }}
+          - name: NEXTAUTH_URL
+            value: {{ requiredEnv "NEXTAUTH_URL" | quote }}
+          - name: NEXTAUTH_GITHUB_ID
+            value: {{ requiredEnv "NEXTAUTH_GITHUB_ID" | quote }}
+          - name: NEXTAUTH_GITHUB_SECRET
+            value: {{ requiredEnv "NEXTAUTH_GITHUB_SECRET" | quote }}
+          - name: GOOGLE_CLIENT_ID
+            value: {{ requiredEnv "GOOGLE_CLIENT_ID" | quote }}
+          - name: GOOGLE_CLIENT_SECRET
+            value: {{ requiredEnv "GOOGLE_CLIENT_SECRET" | quote }}
+          - name: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+            value: {{ requiredEnv "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME" | quote }}
+          - name: NEXT_PUBLIC_PUSHER_APP_KEY
+            value: {{ requiredEnv "NEXT_PUBLIC_PUSHER_APP_KEY" | quote }}
+          - name: PUSHER_APP_ID
+            value: {{ requiredEnv "PUSHER_APP_ID" | quote }}
+          - name: PUSHER_SECRET
+            value: {{ requiredEnv "PUSHER_SECRET" | quote }}

@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String @id @default(cuid())
+  name            String?
+  email           String? @unique
+  emailVerified   DateTime?
+  image           String?
+  hashedPassword  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  conversations Conversation[]
+  
+  seenMessages Message[] @relation("Seen")
+
+  accounts Account[]
+  messages Message[]
+}
+
+model Account {
+  id                 String @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Conversation {
+  id              String @id @default(cuid())
+  createdAt       DateTime @default(now())
+  lastMessageAt   DateTime @default(now())
+  name            String?
+  isGroup         Boolean?
+  
+  messages Message[]
+
+  users User[] 
+}
+
+model Message {
+  id String @id @default(cuid())
+  body String?
+  image String?
+  createdAt DateTime @default(now())
+
+  seen User[] @relation("Seen")
+
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId String
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
