@@ -6,7 +6,7 @@ on:
       - 'main'
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
       -
@@ -29,7 +29,7 @@ jobs:
             NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
 
   deployment:
-    needs: docker
+    needs: build
     runs-on: ubuntu-latest
     environment: 
       name: production
