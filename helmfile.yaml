@@ -4,7 +4,7 @@ releases:
     chart: ./chart
     values:
       - image:
-          repository: hacdescm/messenger-clone
+          repository: {{ requiredEnv "IMAGE_REPOSITORY" | quote }}
           tag: latest
           pullPolicy: Always
         replicaCount: 1
